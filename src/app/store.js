@@ -1,8 +1,16 @@
-import { configureStore } from '@reduxjs/toolkit';
-import counterReducer from '../features/counter/counterSlice';
+import { configureStore } from "@reduxjs/toolkit";
+import websiteReducer from "../features/websites/websiteSlice";
+import expensesReducer from "../features/expenses/expensesSlice";
+import categoriesSlice from "../features/categories/categoriesSlice";
 
-export const store = configureStore({
-  reducer: {
-    counter: counterReducer,
-  },
+const rootReducer = {
+  website: websiteReducer,
+  expenses: expensesReducer,
+  categories: categoriesSlice,
+};
+
+const store = configureStore({
+  reducer: rootReducer,
 });
+
+export default store;
