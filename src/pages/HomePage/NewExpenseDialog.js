@@ -13,13 +13,11 @@ import {
   ListItemText,
 } from "@mui/material";
 
-import { 
-  DateTimePicker
-} from '@mui/x-date-pickers/DateTimePicker';
+import { DateTimePicker } from "@mui/x-date-pickers/DateTimePicker";
 
-import { TimePicker } from '@mui/x-date-pickers/TimePicker';
+import { TimePicker } from "@mui/x-date-pickers/TimePicker";
 
-import { DesktopDatePicker } from '@mui/x-date-pickers/DesktopDatePicker';
+import { DesktopDatePicker } from "@mui/x-date-pickers/DesktopDatePicker";
 
 import { useForm, Controller } from "react-hook-form";
 import LoadingScreen from "../../components/LoadingScreen";
@@ -43,14 +41,14 @@ const ExpenseSchema = Yup.object().shape({
 });
 
 function NewExpenseDialog({ open, onClose }) {
-  const { categories, isLoading } = useSelector(state => state.categories);
+  const { categories, isLoading } = useSelector((state) => state.categories);
 
-  const currentDate = useMemo(() => new Date(), []);
+  const currentDate = useMemo(() => new Date().setHours(0, 0, 0, 0), []);
   const defaultValues = {
     date: format(currentDate, DEFAULT_DATE_FORMAT),
     category: "other",
     amount: 0,
-  }
+  };
   const methods = useForm({
     resolver: yupResolver(ExpenseSchema),
     defaultValues,
@@ -65,14 +63,20 @@ function NewExpenseDialog({ open, onClose }) {
   } = methods;
 
   const onSubmit = useCallback(async (data) => {
-    const parsedDate = parse(data.date, DEFAULT_DATE_FORMAT, currentDate);
+    const formatedDate = format(data.date, DEFAULT_DATE_FORMAT);
+
+    const parsedDate = parse(formatedDate, DEFAULT_DATE_FORMAT, currentDate);
+    console.log("formatedDate", formatedDate);
+    console.log("current", currentDate);
+    console.log("parsedDate", parsedDate);
     const expense = {
       ...defaultValues,
+      ...data,
+      date: formatedDate,
       month: getMonth(parsedDate) + 1,
       year: getYear(parsedDate),
-      ...data,
-    }
-    onClose(expense)
+    };
+    onClose(expense);
     reset();
   }, []);
 
@@ -81,7 +85,7 @@ function NewExpenseDialog({ open, onClose }) {
       acc[category.value] = category;
       return acc;
     }, {});
-  }, [categories])
+  }, [categories]);
 
   return (
     <Dialog open={open} onClose={onClose}>
@@ -113,24 +117,21 @@ function NewExpenseDialog({ open, onClose }) {
               )}
             />
 
-            <FSelect
-              required
-              name="category"
-              label="Category"
-              variant="filled"
-            >
-              {categories && categories.map(category => 
-                <MenuItem key={category.value} value={category.value}>
-                  {/* <ListItemIcon>
+            <FSelect required name="category" label="Category" variant="filled">
+              {categories &&
+                categories.map((category) => (
+                  <MenuItem key={category.value} value={category.value}>
+                    {/* <ListItemIcon>
                     {categoriesMap[category.value] && <img src={categoriesMap[category.value].icon} />}
                   </ListItemIcon> */}
-                  <ListItemText>{category.label}</ListItemText>
-                </MenuItem>)}
+                    <ListItemText>{category.label}</ListItemText>
+                  </MenuItem>
+                ))}
             </FSelect>
 
-            <FTextField 
+            <FTextField
               required
-              name="description" 
+              name="description"
               label="Description"
               variant="filled"
             />
@@ -163,7 +164,7 @@ function NewExpenseDialog({ open, onClose }) {
         </FormProvider>
       </DialogContent>
     </Dialog>
-  )
+  );
 }
 
 export default NewExpenseDialog;

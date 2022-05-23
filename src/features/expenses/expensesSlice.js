@@ -1,6 +1,7 @@
 import { createAsyncThunk, createSlice } from "@reduxjs/toolkit";
-import { getWebsiteConfig } from "../websites/websiteSlice"
+import { getWebsiteConfig } from "../websites/websiteSlice";
 import apiService from "../../app/apiService";
+import { LIMIT_PER_PAGE } from "../../app/config";
 
 import _range from "lodash/range";
 import _merge from "lodash/merge";
@@ -19,7 +20,7 @@ const initialState = {
     //     ...data
     //   },
     // },
-  }
+  },
 };
 
 const slice = createSlice({
@@ -44,7 +45,6 @@ const slice = createSlice({
         state.isLoading = false;
         state.error = action.error.message;
       });
-
   },
 });
 
@@ -57,20 +57,23 @@ export const getAllExpenses = createAsyncThunk(
       const config = getWebsiteConfig(state);
       const currentDate = new Date();
       const promises = _range(config?.monthsToLoad, 1)
-        .map(month => addMonths(currentDate, month))
-        .map(month => ({month: getMonth(month) + 1, year: getYear(month)}))
+        .map((month) => addMonths(currentDate, month))
+        .map((month) => ({ month: getMonth(month) + 1, year: getYear(month) }))
         .map(async (date) => {
           const response = await apiService.get(`/item/${spreadsheetId}`, {
             params: {
-              sort: 'month',
-              order: 'desc',
+              limit: LIMIT_PER_PAGE,
+              sort: "month",
+              order: "desc",
               month: date.month,
               year: date.year,
-            }
+            },
           });
-          return { [date.year]: {
-            [date.month]: response.data.data?.itemList,
-          }};
+          return {
+            [date.year]: {
+              [date.month]: response.data.data?.itemList,
+            },
+          };
         });
       const data = await Promise.all(promises);
       return data.reduce((acc, curr) => _merge(acc, curr), {});
@@ -85,11 +88,12 @@ export const addNewExpense = createAsyncThunk(
     const spreadsheetId = website.website?.spreadsheetId;
     if (spreadsheetId) {
       const ranges = website.website?.ranges;
-      const response = await apiService.post(`/google/${spreadsheetId}/${ranges[0]}/`, {
-        visited: 0,
-        deleted: 0,
-        ...data,
-      });
+      const response = await apiService.post(
+        `/google/${spreadsheetId}/${ranges[0]}/`,
+        {
+          ...data,
+        }
+      );
       dispatch(getAllExpenses());
       return response.data.data;
     }
